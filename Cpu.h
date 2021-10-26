@@ -22,12 +22,29 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#ifndef XMRIG_3RDPARTY_ARGON2_H
-#define XMRIG_3RDPARTY_ARGON2_H
-
-
-#include "3rdparty/argon2/include/argon2.h"
+#ifndef XMRIG_CPU_H
+#define XMRIG_CPU_H
 
 
-#endif /* XMRIG_3RDPARTY_ARGON2_H */
+#include "backend/cpu/interfaces/ICpuInfo.h"
+
+
+namespace xmrig {
+
+
+class Cpu
+{
+public:
+    static ICpuInfo *info();
+    static rapidjson::Value toJSON(rapidjson::Document &doc);
+    static void init();
+    static void release();
+
+    inline static Assembly::Id assembly(Assembly::Id hint) { return hint == Assembly::AUTO ? Cpu::info()->assembly() : hint; }
+};
+
+
+} /* namespace xmrig */
+
+
+#endif /* XMRIG_CPU_H */

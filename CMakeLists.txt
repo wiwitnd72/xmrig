@@ -1,38 +1,38 @@
 cmake_minimum_required (VERSION 2.8)
-project (hwloc C)
+project (cpuid C)
 
-include_directories(include)
-include_directories(src)
+add_definitions(/DVERSION="0.4.0")
 
-add_definitions(/D_CRT_SECURE_NO_WARNINGS)
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os")
 
 set(HEADERS
-    include/hwloc.h
-    src/static-components.h
+    libcpuid.h
+    libcpuid_types.h
+    libcpuid_constants.h
+    libcpuid_internal.h
+    amd_code_t.h
+    intel_code_t.h
+    recog_amd.h
+    recog_intel.h
+    asm-bits.h
+    libcpuid_util.h
     )
 
 set(SOURCES
-	src/base64.c
-	src/bind.c
-	src/bitmap.c
-	src/components.c
-	src/diff.c
-	src/distances.c
-	src/misc.c
-	src/pci-common.c
-	src/shmem.c
-	src/topology.c
-	src/topology-noos.c
-	src/topology-synthetic.c
-	src/topology-windows.c
-	src/topology-x86.c
-	src/topology-xml.c
-	src/topology-xml-nolibxml.c
-    src/traversal.c
+    cpuid_main.c
+    asm-bits.c
+    recog_amd.c
+    recog_intel.c
+    libcpuid_util.c
    )
 
-add_library(hwloc STATIC
+if (CMAKE_CL_64)
+    enable_language(ASM_MASM)
+    set(SOURCES_ASM masm-x64.asm)
+endif()
+
+add_library(cpuid STATIC
     ${HEADERS}
     ${SOURCES}
+    ${SOURCES_ASM}
     )

@@ -22,12 +22,35 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#ifndef XMRIG_3RDPARTY_ARGON2_H
-#define XMRIG_3RDPARTY_ARGON2_H
-
-
-#include "3rdparty/argon2/include/argon2.h"
+#ifndef XMRIG_IWORKER_H
+#define XMRIG_IWORKER_H
 
 
-#endif /* XMRIG_3RDPARTY_ARGON2_H */
+#include <stdint.h>
+#include <stddef.h>
+
+
+namespace xmrig {
+
+
+class VirtualMemory;
+
+
+class IWorker
+{
+public:
+    virtual ~IWorker() = default;
+
+    virtual bool selfTest()                         = 0;
+    virtual const VirtualMemory *memory() const     = 0;
+    virtual size_t id() const                       = 0;
+    virtual uint64_t hashCount() const              = 0;
+    virtual uint64_t timestamp() const              = 0;
+    virtual void start()                            = 0;
+};
+
+
+} // namespace xmrig
+
+
+#endif // XMRIG_IWORKER_H

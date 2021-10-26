@@ -23,11 +23,48 @@
  */
 
 
-#ifndef XMRIG_3RDPARTY_ARGON2_H
-#define XMRIG_3RDPARTY_ARGON2_H
+#ifndef XMRIG_HTTPAPIREQUEST_H
+#define XMRIG_HTTPAPIREQUEST_H
 
 
-#include "3rdparty/argon2/include/argon2.h"
+#include "base/api/requests/ApiRequest.h"
+#include "base/net/http/HttpApiResponse.h"
+#include "base/tools/String.h"
 
 
-#endif /* XMRIG_3RDPARTY_ARGON2_H */
+namespace xmrig {
+
+
+class HttpData;
+
+
+class HttpApiRequest : public ApiRequest
+{
+public:
+    HttpApiRequest(const HttpData &req, bool restricted);
+
+protected:
+    inline bool hasParseError() const override           { return m_parsed == 2; }
+    inline const String &url() const override            { return m_url; }
+    inline rapidjson::Document &doc() override           { return m_res.doc(); }
+    inline rapidjson::Value &reply() override            { return m_res.doc(); }
+
+    bool accept() override;
+    const rapidjson::Value &json() const override;
+    Method method() const override;
+    void done(int status) override;
+
+private:
+    const HttpData &m_req;
+    HttpApiResponse m_res;
+    int m_parsed = 0;
+    rapidjson::Document m_body;
+    String m_url;
+};
+
+
+} // namespace xmrig
+
+
+#endif // XMRIG_HTTPAPIREQUEST_H
+

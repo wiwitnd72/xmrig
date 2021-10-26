@@ -22,12 +22,56 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#ifndef XMRIG_3RDPARTY_ARGON2_H
-#define XMRIG_3RDPARTY_ARGON2_H
-
-
-#include "3rdparty/argon2/include/argon2.h"
+#ifndef XMRIG_CPUBACKEND_H
+#define XMRIG_CPUBACKEND_H
 
 
-#endif /* XMRIG_3RDPARTY_ARGON2_H */
+#include <utility>
+
+
+#include "backend/common/interfaces/IBackend.h"
+
+
+namespace xmrig {
+
+
+class Controller;
+class CpuBackendPrivate;
+class Miner;
+
+
+class CpuBackend : public IBackend
+{
+public:
+    CpuBackend(Controller *controller);
+    ~CpuBackend() override;
+
+    std::pair<unsigned, unsigned> hugePages() const;
+    size_t ways() const;
+
+protected:
+    bool isEnabled() const override;
+    bool isEnabled(const Algorithm &algorithm) const override;
+    const Hashrate *hashrate() const override;
+    const String &profileName() const override;
+    const String &type() const override;
+    void prepare(const Job &nextJob) override;
+    void printHashrate(bool details) override;
+    void setJob(const Job &job) override;
+    void start(IWorker *worker) override;
+    void stop() override;
+    void tick(uint64_t ticks) override;
+
+#   ifdef XMRIG_FEATURE_API
+    rapidjson::Value toJSON(rapidjson::Document &doc) const override;
+#   endif
+
+private:
+    CpuBackendPrivate *d_ptr;
+};
+
+
+} /* namespace xmrig */
+
+
+#endif /* XMRIG_CPUBACKEND_H */

@@ -5,6 +5,7 @@
  * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
+ * Copyright 2018      Lee Clagett <https://github.com/vtnerd>
  * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
  * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
@@ -23,11 +24,28 @@
  */
 
 
-#ifndef XMRIG_3RDPARTY_ARGON2_H
-#define XMRIG_3RDPARTY_ARGON2_H
+#include "backend/common/Worker.h"
+#include "base/kernel/Platform.h"
+#include "base/tools/Chrono.h"
+#include "crypto/common/VirtualMemory.h"
 
 
-#include "3rdparty/argon2/include/argon2.h"
+xmrig::Worker::Worker(size_t id, int64_t affinity, int priority) :
+    m_affinity(affinity),
+    m_id(id),
+    m_hashCount(0),
+    m_timestamp(0),
+    m_count(0)
+{
+    m_node = VirtualMemory::bindToNUMANode(affinity);
+
+    Platform::trySetThreadAffinity(affinity);
+    Platform::setThreadPriority(priority);
+}
 
 
-#endif /* XMRIG_3RDPARTY_ARGON2_H */
+void xmrig::Worker::storeStats()
+{
+    m_hashCount.store(m_count, std::memory_order_relaxed);
+    m_timestamp.store(Chrono::highResolutionMSecs(), std::memory_order_relaxed);
+}

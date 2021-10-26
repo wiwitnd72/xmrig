@@ -4,9 +4,9 @@
  * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
  * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
- * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
+ * Copyright 2017-2019 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
  * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2016-2019 XMRig       <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,12 +22,48 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#ifndef XMRIG_3RDPARTY_ARGON2_H
-#define XMRIG_3RDPARTY_ARGON2_H
-
-
-#include "3rdparty/argon2/include/argon2.h"
+#include <string.h>
+#include <thread>
 
 
-#endif /* XMRIG_3RDPARTY_ARGON2_H */
+#if __ARM_FEATURE_CRYPTO && !defined(__APPLE__)
+#   include <sys/auxv.h>
+#   include <asm/hwcap.h>
+#endif
+
+
+#include "backend/cpu/platform/BasicCpuInfo.h"
+
+
+xmrig::BasicCpuInfo::BasicCpuInfo() :
+    m_brand(),
+    m_threads(std::thread::hardware_concurrency()),
+    m_aes(false),
+    m_avx2(false)
+{
+#   ifdef XMRIG_ARMv8
+    memcpy(m_brand, "ARMv8", 5);
+#   else
+    memcpy(m_brand, "ARMv7", 5);
+#   endif
+
+#   if __ARM_FEATURE_CRYPTO
+#   if !defined(__APPLE__)
+    m_aes = getauxval(AT_HWCAP) & HWCAP_AES;
+#   else
+    m_aes = true;
+#   endif
+#   endif
+}
+
+
+const char *xmrig::BasicCpuInfo::backend() const
+{
+    return "basic_arm";
+}
+
+
+xmrig::CpuThreads xmrig::BasicCpuInfo::threads(const Algorithm &) const
+{
+    return CpuThreads(threads());
+}

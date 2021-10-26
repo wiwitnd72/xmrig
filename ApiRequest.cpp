@@ -23,11 +23,16 @@
  */
 
 
-#ifndef XMRIG_3RDPARTY_ARGON2_H
-#define XMRIG_3RDPARTY_ARGON2_H
+#include "base/api/requests/ApiRequest.h"
 
 
-#include "3rdparty/argon2/include/argon2.h"
+xmrig::ApiRequest::ApiRequest(Source source, bool restricted) :
+    m_restricted(restricted),
+    m_source(source)
+{
+}
 
 
-#endif /* XMRIG_3RDPARTY_ARGON2_H */
+xmrig::ApiRequest::~ApiRequest()
+{
+}

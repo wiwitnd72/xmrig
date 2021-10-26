@@ -1,43 +1,79 @@
-if (NOT CMAKE_SYSTEM_PROCESSOR)
-    message(WARNING "CMAKE_SYSTEM_PROCESSOR not defined")
-endif()
+set(HEADERS_BACKEND_CPU
+    src/backend/cpu/Cpu.h
+    src/backend/cpu/CpuBackend.h
+    src/backend/cpu/CpuConfig.h
+    src/backend/cpu/CpuLaunchData.cpp
+    src/backend/cpu/CpuThread.h
+    src/backend/cpu/CpuThreads.h
+    src/backend/cpu/CpuWorker.h
+    src/backend/cpu/interfaces/ICpuInfo.h
+   )
+
+set(SOURCES_BACKEND_CPU
+    src/backend/cpu/Cpu.cpp
+    src/backend/cpu/CpuBackend.cpp
+    src/backend/cpu/CpuConfig.cpp
+    src/backend/cpu/CpuLaunchData.h
+    src/backend/cpu/CpuThread.cpp
+    src/backend/cpu/CpuThreads.cpp
+    src/backend/cpu/CpuWorker.cpp
+   )
 
 
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
-    add_definitions(/DRAPIDJSON_SSE2)
-endif()
-
-if (NOT ARM_TARGET)
-    if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|armv8-a)$")
-        set(ARM_TARGET 8)
-    elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(armv7|armv7f|armv7s|armv7k|armv7-a|armv7l)$")
-        set(ARM_TARGET 7)
+if (WITH_HWLOC)
+    if (CMAKE_CXX_COMPILER_ID MATCHES MSVC)
+        add_subdirectory(src/3rdparty/hwloc)
+        include_directories(src/3rdparty/hwloc/include)
+        set(CPUID_LIB hwloc)
+    else()
+        find_package(HWLOC REQUIRED)
+        include_directories(${HWLOC_INCLUDE_DIR})
+        set(CPUID_LIB ${HWLOC_LIBRARY})
     endif()
+
+    set(WITH_LIBCPUID OFF)
+
+    remove_definitions(/DXMRIG_FEATURE_LIBCPUID)
+    add_definitions(/DXMRIG_FEATURE_HWLOC)
+
+    if (HWLOC_DEBUG)
+        add_definitions(/DXMRIG_HWLOC_DEBUG)
+    endif()
+
+    set(SOURCES_CPUID
+        src/backend/cpu/platform/BasicCpuInfo.h
+        src/backend/cpu/platform/HwlocCpuInfo.cpp
+        src/backend/cpu/platform/HwlocCpuInfo.h
+        )
+elseif (WITH_LIBCPUID)
+    set(WITH_HWLOC OFF)
+
+    add_subdirectory(src/3rdparty/libcpuid)
+    include_directories(src/3rdparty/libcpuid)
+
+    add_definitions(/DXMRIG_FEATURE_LIBCPUID)
+    remove_definitions(/DXMRIG_FEATURE_HWLOC)
+
+    set(CPUID_LIB cpuid)
+    set(SOURCES_CPUID
+        src/backend/cpu/platform/AdvancedCpuInfo.cpp
+        src/backend/cpu/platform/AdvancedCpuInfo.h
+        )
+else()
+    remove_definitions(/DXMRIG_FEATURE_LIBCPUID)
+    remove_definitions(/DXMRIG_FEATURE_HWLOC)
+
+    set(CPUID_LIB "")
+    set(SOURCES_CPUID
+        src/backend/cpu/platform/BasicCpuInfo.h
+        )
 endif()
 
-if (ARM_TARGET AND ARM_TARGET GREATER 6)
-    set(XMRIG_ARM     ON)
-    set(WITH_LIBCPUID OFF)
-    add_definitions(/DXMRIG_ARM)
 
-    message(STATUS "Use ARM_TARGET=${ARM_TARGET} (${CMAKE_SYSTEM_PROCESSOR})")
-
-    include(CheckCXXCompilerFlag)
-
-    if (ARM_TARGET EQUAL 8)
-        set(XMRIG_ARMv8 ON)
-        add_definitions(/DXMRIG_ARMv8)
-
-        CHECK_CXX_COMPILER_FLAG(-march=armv8-a+crypto XMRIG_ARM_CRYPTO)
-
-        if (XMRIG_ARM_CRYPTO)
-            add_definitions(/DXMRIG_ARM_CRYPTO)
-            set(ARM8_CXX_FLAGS "-march=armv8-a+crypto")
-        else()
-            set(ARM8_CXX_FLAGS "-march=armv8-a")
-        endif()
-    elseif (ARM_TARGET EQUAL 7)
-        set(XMRIG_ARMv7 ON)
-        add_definitions(/DXMRIG_ARMv7)
+if (NOT WITH_LIBCPUID)
+    if (XMRIG_ARM)
+        set(SOURCES_CPUID ${SOURCES_CPUID} src/backend/cpu/platform/BasicCpuInfo_arm.cpp)
+    else()
+        set(SOURCES_CPUID ${SOURCES_CPUID} src/backend/cpu/platform/BasicCpuInfo.cpp)
     endif()
 endif()

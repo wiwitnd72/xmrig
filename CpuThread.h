@@ -22,12 +22,41 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#ifndef XMRIG_3RDPARTY_ARGON2_H
-#define XMRIG_3RDPARTY_ARGON2_H
-
-
-#include "3rdparty/argon2/include/argon2.h"
+#ifndef XMRIG_CPUTHREAD_H
+#define XMRIG_CPUTHREAD_H
 
 
-#endif /* XMRIG_3RDPARTY_ARGON2_H */
+#include "rapidjson/fwd.h"
+
+
+namespace xmrig {
+
+
+class CpuThread
+{
+public:
+    inline constexpr CpuThread() {}
+    inline constexpr CpuThread(int64_t affinity, uint32_t intensity) : m_affinity(affinity), m_intensity(intensity) {}
+
+    CpuThread(const rapidjson::Value &value);
+
+    inline bool isEqual(const CpuThread &other) const       { return other.m_affinity == m_affinity && other.m_intensity == m_intensity; }
+    inline bool isValid() const                             { return m_intensity <= 5; }
+    inline int64_t affinity() const                         { return m_affinity; }
+    inline uint32_t intensity() const                       { return m_intensity == 0 ? 1 : m_intensity; }
+
+    inline bool operator!=(const CpuThread &other) const    { return !isEqual(other); }
+    inline bool operator==(const CpuThread &other) const    { return isEqual(other); }
+
+    rapidjson::Value toJSON(rapidjson::Document &doc) const;
+
+private:
+    int64_t m_affinity   = -1;
+    uint32_t m_intensity = 0;
+};
+
+
+} /* namespace xmrig */
+
+
+#endif /* XMRIG_CPUTHREAD_H */

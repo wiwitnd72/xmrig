@@ -22,12 +22,46 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#ifndef XMRIG_3RDPARTY_ARGON2_H
-#define XMRIG_3RDPARTY_ARGON2_H
-
-
-#include "3rdparty/argon2/include/argon2.h"
+#ifndef XMRIG_THREAD_H
+#define XMRIG_THREAD_H
 
 
-#endif /* XMRIG_3RDPARTY_ARGON2_H */
+#include <thread>
+
+
+#include "backend/common/interfaces/IWorker.h"
+
+
+namespace xmrig {
+
+
+class IBackend;
+
+
+template<class T>
+class Thread
+{
+public:
+    inline Thread(IBackend *backend, size_t index, const T &config) : m_index(index), m_config(config), m_backend(backend) {}
+    inline ~Thread() { m_thread.join(); delete m_worker; }
+
+    inline const T &config() const                  { return m_config; }
+    inline IBackend *backend() const                { return m_backend; }
+    inline IWorker *worker() const                  { return m_worker; }
+    inline size_t index() const                     { return m_index; }
+    inline void setWorker(IWorker *worker)          { m_worker = worker; }
+    inline void start(void (*callback) (void *))    { m_thread = std::thread(callback, this); }
+
+private:
+    const size_t m_index    = 0;
+    const T m_config;
+    IBackend *m_backend;
+    IWorker *m_worker       = nullptr;
+    std::thread m_thread;
+};
+
+
+} // namespace xmrig
+
+
+#endif /* XMRIG_THREAD_H */

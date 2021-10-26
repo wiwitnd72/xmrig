@@ -5,6 +5,7 @@
  * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
+ * Copyright 2018      Lee Clagett <https://github.com/vtnerd>
  * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
  * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
@@ -22,12 +23,49 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#ifndef XMRIG_3RDPARTY_ARGON2_H
-#define XMRIG_3RDPARTY_ARGON2_H
-
-
-#include "3rdparty/argon2/include/argon2.h"
+#ifndef XMRIG_CPULAUNCHDATA_H
+#define XMRIG_CPULAUNCHDATA_H
 
 
-#endif /* XMRIG_3RDPARTY_ARGON2_H */
+#include "crypto/cn/CnHash.h"
+#include "crypto/common/Algorithm.h"
+#include "crypto/common/Assembly.h"
+#include "crypto/common/Nonce.h"
+
+
+namespace xmrig {
+
+
+class CpuConfig;
+class CpuThread;
+class Miner;
+
+
+class CpuLaunchData
+{
+public:
+    CpuLaunchData(const Miner *miner, const Algorithm &algorithm, const CpuConfig &config, const CpuThread &thread);
+
+    bool isEqual(const CpuLaunchData &other) const;
+    CnHash::AlgoVariant av() const;
+
+    inline constexpr static Nonce::Backend backend() { return Nonce::CPU; }
+
+    inline bool operator!=(const CpuLaunchData &other) const    { return !isEqual(other); }
+    inline bool operator==(const CpuLaunchData &other) const    { return isEqual(other); }
+
+    const Algorithm algorithm;
+    const Assembly assembly;
+    const bool hugePages;
+    const bool hwAES;
+    const int priority;
+    const int64_t affinity;
+    const Miner *miner;
+    const uint32_t intensity;
+};
+
+
+} // namespace xmrig
+
+
+#endif /* XMRIG_CPULAUNCHDATA_H */
